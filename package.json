@@ -1,0 +1,24 @@
+{
+  "name": "automation-web-cypress-cucumber",
+  "version": "1.0.0",
+  "description": "Cypress + Cucumber BDD automation testing for SauceDemo",
+  "scripts": {
+    "test": "cypress run",
+    "test:headed": "cypress run --headed",
+    "test:open": "cypress open",
+    "test:login": "cypress run --spec 'cypress/e2e/features/login.feature'",
+    "test:inventory": "cypress run --spec 'cypress/e2e/features/inventory.feature'",
+    "test:cart": "cypress run --spec 'cypress/e2e/features/cart.feature'",
+    "test:checkout": "cypress run --spec 'cypress/e2e/features/checkout*.feature'"
+  },
+  "devDependencies": {
+    "cypress": "^13.17.0",
+    "@badeball/cypress-cucumber-preprocessor": "^22.1.0",
+    "@bahmutov/cypress-esbuild-preprocessor": "^2.2.5",
+    "esbuild": "^0.25.2"
+  },
+  "cypress-cucumber-preprocessor": {
+    "nonGlobalStepDefinitions": false,
+    "stepDefinitions": "cypress/e2e/step_definitions/**/*.js"
+  }
+}
