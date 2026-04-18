@@ -1,6 +1,11 @@
-# Automation Web Testing — Cypress + Cucumber BDD
+# Automation Testing — Cypress + Cucumber BDD
 
-An end-to-end automated test suite for [SauceDemo](https://www.saucedemo.com) built with **Cypress** and **Cucumber BDD** (Gherkin syntax). This project follows a three-layer architecture: **Feature → Step Definitions → Page Objects**, ensuring tests are readable, maintainable, and scalable.
+A comprehensive automated test suite covering both **End-to-End (E2E) Web Testing** and **API Testing**, built with **Cypress**, **Cucumber BDD** (Gherkin syntax), and **Chai**.
+
+- **E2E Target:** [SauceDemo](https://www.saucedemo.com) — a demo e-commerce web application
+- **API Target:** [One Piece Characters API](https://api.api-onepiece.com/v2/characters/en) — a public REST API
+
+The project follows a **three-layer architecture** (Feature → Step Definitions → Page Objects) for E2E tests, keeping scenarios readable, maintainable, and scalable.
 
 ---
 
@@ -9,14 +14,16 @@ An end-to-end automated test suite for [SauceDemo](https://www.saucedemo.com) bu
 1. [Tech Stack](#tech-stack)
 2. [Prerequisites](#prerequisites)
 3. [Project Structure](#project-structure)
-4. [Setup & Installation](#setup--installation)
-5. [Running the Tests](#running-the-tests)
-6. [Test Coverage](#test-coverage)
-7. [Test Users](#test-users)
-8. [Bug Reports](#bug-reports)
-9. [Test Output](#test-output)
-10. [Configuration](#configuration)
-11. [Troubleshooting](#troubleshooting)
+4. [Architecture Overview](#architecture-overview)
+5. [Setup & Installation](#setup--installation)
+6. [Running the Tests](#running-the-tests)
+7. [Test Coverage — E2E](#test-coverage--e2e)
+8. [Test Coverage — API](#test-coverage--api)
+9. [Test Users](#test-users)
+10. [Bug Reports](#bug-reports)
+11. [Test Artifacts](#test-artifacts)
+12. [Configuration](#configuration)
+13. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -24,10 +31,11 @@ An end-to-end automated test suite for [SauceDemo](https://www.saucedemo.com) bu
 
 | Tool | Version | Purpose |
 |------|---------|---------|
-| [Cypress](https://www.cypress.io) | ^13.17.0 | Core E2E testing framework |
+| [Cypress](https://www.cypress.io) | ^13.17.0 | Core testing framework for both E2E and API |
 | [@badeball/cypress-cucumber-preprocessor](https://github.com/badeball/cypress-cucumber-preprocessor) | ^22.1.0 | Enables Cucumber/Gherkin syntax in Cypress |
-| [@bahmutov/cypress-esbuild-preprocessor](https://github.com/bahmutov/cypress-esbuild-preprocessor) | ^2.2.5 | Bundles feature files using esbuild |
+| [@bahmutov/cypress-esbuild-preprocessor](https://github.com/bahmutov/cypress-esbuild-preprocessor) | ^2.2.5 | Bundles feature files and JS specs using esbuild |
 | [esbuild](https://esbuild.github.io) | ^0.25.2 | Fast JavaScript bundler |
+| [chai-json-schema](https://github.com/chaijs/chai-json-schema) | ^1.5.1 | JSON Schema validation for API response assertions |
 
 ---
 
@@ -63,55 +71,95 @@ git version 2.43.0
 automation-web-cypress-cucumber/
 │
 ├── cypress/
-│   ├── e2e/
-│   │   ├── features/                   # Gherkin test scenarios (.feature files)
+│   │
+│   ├── e2e/                                  # End-to-End (Web) Tests
+│   │   ├── features/                         # Gherkin test scenarios (.feature files)
 │   │   │   ├── login.feature
 │   │   │   ├── inventory.feature
 │   │   │   ├── cart.feature
 │   │   │   └── checkout.feature
 │   │   │
-│   │   └── step_definitions/           # JavaScript implementation of Gherkin steps
-│   │       ├── common.steps.js         # Shared steps used across multiple features
+│   │   └── step_definitions/                 # JavaScript implementation of Gherkin steps
+│   │       ├── common.steps.js               # Shared steps (login, navigation)
 │   │       ├── login.steps.js
 │   │       ├── inventory.steps.js
 │   │       ├── cart.steps.js
 │   │       └── checkout.steps.js
 │   │
+│   ├── api/                                  # API Tests (plain Cypress + Chai)
+│   │   └── one-piece/
+│   │       └── characters.js                 # One Piece Characters API test suite
+│   │
 │   ├── support/
-│   │   ├── pages/                      # Page Object Model (POM)
+│   │   ├── pages/                            # Page Object Model (POM)
 │   │   │   ├── LoginPage.js
 │   │   │   ├── InventoryPage.js
 │   │   │   ├── CartPage.js
 │   │   │   └── CheckoutPage.js
-│   │   ├── commands.js                 # Global Cypress custom commands
-│   │   └── e2e.js                      # Support entry point, loaded before every test
+│   │   │
+│   │   ├── api/                              # API helpers and schemas
+│   │   │   ├── config/
+│   │   │   │   └── url.json                  # Base URLs and endpoints
+│   │   │   └── one-piece/
+│   │   │       ├── characters-api.js         # cy.request() wrapper
+│   │   │       └── characters-schema.js      # JSON Schema definitions
+│   │   │
+│   │   ├── commands.js                       # Global Cypress custom commands
+│   │   └── e2e.js                            # Support entry point
 │   │
 │   └── fixtures/
-│       └── users.json                  # Test user credentials
+│       └── users.json                        # Test user credentials
 │
-├── cypress.config.js                   # Cypress configuration file
-├── package.json                        # Project dependencies and scripts
+├── cypress.config.js                         # Cypress configuration
+├── package.json                              # Dependencies and npm scripts
 └── README.md
 ```
 
-### Layer Explanation
+---
 
-This project uses a **three-layer architecture** to keep the codebase clean and easy to maintain:
+## Architecture Overview
 
-**Layer 1 — Feature Files (`features/`)**
+### E2E Tests — Three-Layer Architecture
 
-Written in Gherkin syntax (`Given / When / Then / And`). These files describe test scenarios in plain English, making them readable by anyone — including non-technical stakeholders. Each file maps to one page of the application.
+The E2E test suite is organized into three clear layers, ensuring separation of concerns and easy maintenance:
 
-**Layer 2 — Step Definitions (`step_definitions/`)**
+```
+┌─────────────────────────────────────────┐
+│  Layer 1: Feature Files (.feature)      │  ← Plain English, readable by everyone
+│  "Given I am on the login page..."      │
+└────────────────────┬────────────────────┘
+                     │
+┌────────────────────▼────────────────────┐
+│  Layer 2: Step Definitions (.steps.js)  │  ← Bridges Gherkin to Page Objects
+│  Thin — delegates to Page Objects only  │
+└────────────────────┬────────────────────┘
+                     │
+┌────────────────────▼────────────────────┐
+│  Layer 3: Page Objects (pages/*.js)     │  ← All selectors and Cypress commands
+│  do*() / validate*() / get*() methods  │
+└─────────────────────────────────────────┘
+```
 
-These files bridge the Gherkin steps and the actual test logic. Each step definition is intentionally kept thin — it receives parameters from the feature file and delegates the work to a Page Object method. No direct `cy.get()` calls exist here.
+**Page Object method naming convention:**
 
-**Layer 3 — Page Objects (`support/pages/`)**
+| Prefix | Purpose | Example |
+|--------|---------|---------|
+| `do*` | Performs an action | `doLogin()`, `doClickCheckout()` |
+| `validate*` | Asserts a condition | `validateOnInventoryPage()`, `validateErrorMessage()` |
+| `get*` | Retrieves data | `getItemPrice()` |
 
-Each page of the application has its own class file. All selectors and Cypress interactions are contained here. Method naming follows a consistent convention:
-- `do*` — actions (e.g., `doLogin()`, `doClickCheckout()`)
-- `validate*` — assertions (e.g., `validateOnInventoryPage()`, `validateErrorMessage()`)
-- `get*` — data retrieval (e.g., `getItemPrice()`)
+### API Tests — Two-Layer Architecture
+
+```
+┌─────────────────────────────────────────┐
+│  cypress/api/**/*.js                    │  ← describe/it blocks with Chai assertions
+└────────────────────┬────────────────────┘
+                     │
+┌────────────────────▼────────────────────┐
+│  cypress/support/api/                   │  ← API helpers, schemas, URL config
+│  characters-api.js / characters-schema  │
+└─────────────────────────────────────────┘
+```
 
 ---
 
@@ -130,7 +178,7 @@ cd automation-web-cypress-cucumber
 npm install
 ```
 
-This command installs all packages listed in `package.json` into the `node_modules/` directory. This may take 30–60 seconds depending on your internet connection.
+This installs all packages listed in `package.json` into the `node_modules/` folder. This may take 30–60 seconds depending on your internet connection.
 
 ### Step 3 — Verify Cypress Installation
 
@@ -145,7 +193,7 @@ Expected output:
     /Users/<your-user>/Library/Caches/Cypress/13.x.x/Cypress.app
 ```
 
-If the verification fails, run the following to reinstall the Cypress binary:
+If verification fails, reinstall the Cypress binary:
 
 ```bash
 npx cypress install
@@ -153,110 +201,117 @@ npx cypress install
 
 ### Step 4 — Confirm Project is Ready
 
-To confirm everything is set up correctly, run a quick check:
-
 ```bash
 npx cypress info
 ```
 
-This command displays Cypress version, available browsers, and system information. You are ready to run tests once no errors appear.
+This displays your Cypress version, available browsers, and system information. You are ready to proceed when no errors appear.
 
 ---
 
 ## Running the Tests
 
-### Option 1 — Interactive Mode (Cypress UI)
-
-> **Recommended for development and debugging.**
-
-```bash
-npm run test:open
-```
-
-This opens the **Cypress Test Runner** in your browser. From here you can:
-- See all available feature files
-- Run individual scenarios
-- Watch tests execute in real time with visual feedback
-- Inspect DOM elements, network requests, and console logs
-
-**Steps after the UI opens:**
-1. Select **E2E Testing**
-2. Choose a browser (Chrome is recommended)
-3. Click **Start E2E Testing**
-4. Click any `.feature` file to run it
-
----
-
-### Option 2 — Headless Mode (All Tests)
-
-> **Recommended for CI/CD pipelines and full regression runs.**
+### All Tests (E2E + API)
 
 ```bash
 npm test
 ```
 
-Runs all test scenarios headlessly (no browser window). Results are printed directly in the terminal. Video recordings are automatically saved for every test run, and screenshots are captured on failure.
+Runs the full test suite headlessly. This includes all E2E feature files and all API test specs.
 
 ---
 
-### Option 3 — Run a Specific Feature
+### Interactive Mode — Cypress UI
 
-Run tests for a single page only:
+> Recommended for development and debugging.
 
 ```bash
-# Login Page
-npm run test:login
-
-# Inventory Page
-npm run test:inventory
-
-# Cart Page
-npm run test:cart
-
-# Full Checkout Flow (Step One, Step Two, Complete)
-npm run test:checkout
+npm run test:open
 ```
+
+Opens the **Cypress Test Runner**. From here you can:
+- Browse all available feature files and API spec files
+- Run individual scenarios
+- Watch tests execute in real time
+- Inspect DOM elements, network requests, and console logs
+
+**Steps to run in the UI:**
+1. Select **E2E Testing**
+2. Choose a browser (Chrome recommended)
+3. Click **Start E2E Testing**
+4. Click any `.feature` file (for E2E) or `characters.js` (for API)
 
 ---
 
-### Option 4 — Headed Mode
+### Headed Mode
 
 ```bash
 npm run test:headed
 ```
 
-Runs all tests with the browser window visible — useful for observing test execution without opening the full Cypress UI.
+Runs all tests with the browser window visible — useful for observing execution without opening the full Cypress UI.
 
 ---
 
-### Option 5 — Run by Tag
-
-Each feature file is tagged. You can target a specific tag to run only the related tests:
+### Run a Specific E2E Feature
 
 ```bash
-# Run only login tests
-npx cypress run --env tags=@login
+# Login Page only
+npm run test:login
 
-# Run only checkout tests
-npx cypress run --env tags=@checkout
+# Inventory Page only
+npm run test:inventory
 
-# Run all tests
-npx cypress run --env tags=@saucedemo
+# Cart Page only
+npm run test:cart
+
+# Full Checkout Flow (Step One → Step Two → Complete)
+npm run test:checkout
 ```
 
-Available tags:
+---
+
+### Run API Tests Only
+
+```bash
+npx cypress run --spec 'cypress/api/**/*.js'
+```
+
+---
+
+### Run by Tag
+
+Each feature is tagged. You can target a specific tag to run only the related tests:
+
+```bash
+# All E2E + API tests
+npx cypress run --env tags=@saucedemo
+
+# Login tests only
+npx cypress run --env tags=@login
+
+# API tests only
+npx cypress run --env tags=@api
+
+# One Piece API tests only
+npx cypress run --env tags=@one-piece
+```
+
+**Available tags:**
 
 | Tag | Scope |
 |-----|-------|
-| `@saucedemo` | All tests |
+| `@saucedemo` | All E2E tests |
 | `@login` | Login Page |
 | `@inventory` | Inventory Page |
 | `@cart` | Cart Page |
 | `@checkout` | Checkout Flow |
+| `@api` | All API tests |
+| `@one-piece` | One Piece Characters API |
 
 ---
 
-## Test Coverage
+## Test Coverage — E2E
 
 ### Login Page — `login.feature`
 
@@ -270,10 +325,10 @@ Available tags:
 
 | # | Scenario | Type |
 |---|----------|------|
-| 1 | Inventory page displays all available products | ✅ Positive |
+| 1 | Inventory page displays all 6 available products | ✅ Positive |
 | 2 | User can add an item to the cart from the inventory | ✅ Positive |
 | 3 | Unauthenticated user is redirected to the login page | ❌ Negative |
-| 4 | [Bug] problem_user sees broken product images | 🐛 Bug |
+| 4 | `[Bug]` problem_user sees broken product images | 🐛 Bug |
 
 ### Cart Page — `cart.feature`
 
@@ -285,16 +340,40 @@ Available tags:
 
 ### Checkout Flow — `checkout.feature`
 
+All checkout steps (Step One, Step Two, Complete) are covered in a single feature file.
+
 | # | Scenario | Type |
 |---|----------|------|
 | 1 | Successfully fill in checkout information and proceed to step two | ✅ Positive |
 | 2 | Cannot proceed to checkout when the form is empty | ❌ Negative |
 | 3 | Order summary displays the correct item and price | ✅ Positive |
 | 4 | User can complete the order by clicking Finish | ✅ Positive |
-| 5 | [Bug] Accessing step two directly results in an empty order summary | 🐛 Bug |
+| 5 | `[Bug]` Accessing step two directly results in an empty order summary | 🐛 Bug |
 | 6 | Order confirmation is displayed after a successful checkout | ✅ Positive |
 | 7 | Clicking Back Home returns to inventory with an empty cart | ✅ Positive |
-| 8 | [Bug] Checkout complete page is accessible without placing an order | 🐛 Bug |
+| 8 | `[Bug]` Checkout complete page is accessible without placing an order | 🐛 Bug |
+
+**E2E Total: 18 scenarios — 13 functional tests, 2 negative tests, 3 bug reports**
+
+---
+
+## Test Coverage — API
+
+### One Piece Characters API — `cypress/api/one-piece/characters.js`
+
+**Endpoint:** `GET https://api.api-onepiece.com/v2/characters/en`
+
+| # | Test Case | Expected Result |
+|---|-----------|----------------|
+| 1 | Status code should be 200 | ✅ Pass |
+| 2 | Response should match the character JSON schema | ✅ Pass |
+| 3 | Each character ID must be unique | ✅ Pass |
+| 4 | Gum-Gum Fruit must be exclusive to Monkey D. Luffy | ✅ Pass |
+| 5 | `total_prime` must equal the sum of bounty for all characters in the same crew | 🐛 Fails — API data bug detected |
+
+> **Note on Test #5:** This test is intentionally designed to fail when the API data is inconsistent. It currently detects **15 crews** where the `total_prime` value does not match the sum of individual character bounties — confirming a data quality issue in the API. The test is working correctly; the failure is a **bug report**, not a test defect.
+
+**API Total: 5 test cases — 4 pass, 1 detects an API data bug**
 
 ---
 
@@ -305,84 +384,118 @@ User credentials are stored in `cypress/fixtures/users.json` and loaded at runti
 | Username | Password | Description |
 |----------|----------|-------------|
 | `standard_user` | `secret_sauce` | Standard valid user — all features work as expected |
-| `locked_out_user` | `secret_sauce` | Locked account — login is blocked |
-| `problem_user` | `secret_sauce` | Has broken product images — used for bug verification |
+| `locked_out_user` | `secret_sauce` | Locked account — login is intentionally blocked |
+| `problem_user` | `secret_sauce` | Exhibits broken product images — used for bug verification |
 
 ---
 
 ## Bug Reports
 
-Three bugs were identified during test case design and are covered as dedicated test scenarios.
+This project identifies and documents **4 bugs** — 3 in the web application and 1 in the API.
 
 ---
 
 ### Bug 1 — Broken Product Images (`problem_user`)
 
-| | |
-|-|-|
+| Field | Detail |
+|-------|--------|
+| **Type** | E2E — UI |
 | **Page** | Inventory |
 | **Trigger** | Log in using the `problem_user` account |
-| **Actual behavior** | All product images fail to load (`naturalWidth = 0`) |
-| **Expected behavior** | All product images should render correctly |
-| **Test scenario** | `[Bug] problem_user sees broken product images on the inventory page` |
+| **Actual Behavior** | All product images fail to load (`naturalWidth = 0`) |
+| **Expected Behavior** | All product images should render correctly |
+| **Test Scenario** | `[Bug] problem_user sees broken product images on the inventory page` |
 
 ---
 
 ### Bug 2 — Checkout Step Two Accessible Without Completing Step One
 
-| | |
-|-|-|
-| **Page** | Checkout Step Two |
+| Field | Detail |
+|-------|--------|
+| **Type** | E2E — Navigation |
+| **Page** | Checkout — Step Two |
 | **Trigger** | Navigate directly to `/checkout-step-two.html` without going through Step One |
-| **Actual behavior** | The page loads but the order summary is completely empty |
-| **Expected behavior** | The user should be redirected to Step One or shown an error |
-| **Test scenario** | `[Bug] Accessing checkout step two directly results in an empty order summary` |
+| **Actual Behavior** | Page loads but the order summary is completely empty |
+| **Expected Behavior** | User should be redirected to Step One or shown a validation error |
+| **Test Scenario** | `[Bug] Accessing checkout step two directly results in an empty order summary` |
 
 ---
 
 ### Bug 3 — Checkout Complete Page Accessible Without an Order
 
-| | |
-|-|-|
-| **Page** | Checkout Complete |
+| Field | Detail |
+|-------|--------|
+| **Type** | E2E — Navigation |
+| **Page** | Checkout — Complete |
 | **Trigger** | Navigate directly to `/checkout-complete.html` without completing a checkout |
-| **Actual behavior** | The page displays "Thank you for your order!" with no actual order placed |
-| **Expected behavior** | The user should be redirected to the inventory or cart page |
-| **Test scenario** | `[Bug] Checkout complete page is accessible without completing an order` |
+| **Actual Behavior** | Page displays "Thank you for your order!" with no actual order placed |
+| **Expected Behavior** | User should be redirected to the inventory or cart page |
+| **Test Scenario** | `[Bug] Checkout complete page is accessible without completing an order` |
 
 ---
 
-## Test Output
+### Bug 4 — Stale `total_prime` Values in the One Piece API
 
-After running tests, the following artifacts are automatically generated:
+| Field | Detail |
+|-------|--------|
+| **Type** | API — Data Quality |
+| **Endpoint** | `GET /v2/characters/en` |
+| **Trigger** | Compare `crew.total_prime` against the sum of all `bounty` values per `crew_id` |
+| **Actual Behavior** | 15 crews have a mismatch — `total_prime` does not equal the sum of member bounties |
+| **Expected Behavior** | `total_prime` should always equal the sum of all crew member bounties |
+| **Example** | Crew "The Chapeau de Paille crew": `total_prime = 3,161,000,100` but `bounty_sum = 8,806,001,000` |
+| **Test Scenario** | `total_prime must equal the sum of bounty for all characters in the same crew` |
+
+---
+
+## Test Artifacts
+
+After running tests, the following artifacts are automatically generated inside the `cypress/` directory:
 
 ```
 cypress/
-├── videos/        # MP4 recording of every test run
-└── screenshots/   # PNG screenshots captured on test failure
+├── videos/        # MP4 recording of every test run (auto-generated)
+└── screenshots/   # PNG screenshot captured on every test failure (auto-generated)
 ```
 
-### Sample Terminal Output (All Passing)
+These are useful for diagnosing failures without re-running tests manually.
+
+---
+
+### Sample Terminal Output
 
 ```
+  One Piece Characters API
+    ✓ Status code should be 200                                              (4016ms)
+    ✓ Response should match the character JSON schema                          (13ms)
+    ✓ Each character ID must be unique                                          (8ms)
+    ✓ Gum-Gum Fruit must be exclusive to Monkey D. Luffy                       (8ms)
+    ✗ total_prime must equal the sum of bounty for all characters in the same crew
+
   Login Page
-    ✓ Successful login with valid credentials            (1,203ms)
-    ✓ Login fails with invalid credentials                 (834ms)
-    ✓ Login fails for a locked out user                    (761ms)
-
-  Inventory Page
-    ✓ Inventory page displays all available products       (952ms)
-    ✓ User can add an item to the cart from the inventory  (887ms)
-    ✓ Unauthenticated user is redirected to login page     (743ms)
-    ✗ [Bug] problem_user sees broken product images       (1,102ms)
+    ✓ Successful login with valid credentials                               (1,203ms)
+    ✓ Login fails with invalid credentials                                    (834ms)
+    ✓ Login fails for a locked out user                                       (761ms)
 
   ...
 
-  14 passing (38s)
-  1 failing
+  ┌──────────────────────────────────────────────────┐
+  │  Tests:     23  Passing: 19  Failing: 4          │
+  └──────────────────────────────────────────────────┘
 ```
 
-> The Bug scenarios are **expected to fail** — they document known defects in the application.
+### Intentionally Failing Scenarios
+
+The **4 failing tests** are not broken automation — they are scenarios **deliberately written to fail** as required by the test specification (Section B, Point 2: *"Identify at least two bugs across the entire website"*). Each failure confirms the existence of a real defect.
+
+| # | Scenario | Location | Why It Fails |
+|---|----------|----------|--------------|
+| 1 | `[Bug] problem_user sees broken product images on the inventory page` | `inventory.feature` | The `problem_user` account serves broken images — `naturalWidth = 0` for all products |
+| 2 | `[Bug] Accessing checkout step two directly results in an empty order summary` | `checkout.feature` | Navigating directly to `/checkout-step-two.html` bypasses Step One, resulting in an empty order |
+| 3 | `[Bug] Checkout complete page is accessible without completing an order` | `checkout.feature` | Navigating directly to `/checkout-complete.html` displays "Thank you for your order!" with no order placed |
+| 4 | `total_prime must equal the sum of bounty for all characters in the same crew` | `characters.js` (API) | The API's `total_prime` values are outdated — 15 crews have a mismatch against the sum of member bounties |
+
+> These scenarios will automatically **pass** if the underlying defects are resolved by the application or API owners.
 
 ---
 
@@ -392,13 +505,15 @@ All Cypress settings are defined in `cypress.config.js`.
 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
-| `baseUrl` | `https://www.saucedemo.com` | The base URL prepended to all `cy.visit()` calls |
-| `specPattern` | `cypress/e2e/features/**/*.feature` | Glob pattern Cypress uses to find test files |
+| `baseUrl` | `https://www.saucedemo.com` | Base URL for all `cy.visit()` calls in E2E tests |
+| `specPattern` | `features/**/*.feature`, `api/**/*.js` | Glob patterns Cypress uses to discover test files |
 | `supportFile` | `cypress/support/e2e.js` | Support file loaded automatically before every test |
 | `viewportWidth` | `1280` | Browser viewport width in pixels |
 | `viewportHeight` | `720` | Browser viewport height in pixels |
-| `video` | `true` | Record a video of every test run |
-| `defaultCommandTimeout` | `10000` | Maximum time (ms) Cypress waits for a command to succeed |
-| `pageLoadTimeout` | `30000` | Maximum time (ms) Cypress waits for a page to fully load |
+| `video` | `true` | Records an MP4 video of every test run |
+| `screenshotOnRunFailure` | `true` | Captures a PNG screenshot on every test failure |
+| `defaultCommandTimeout` | `10000ms` | Maximum time Cypress waits for a DOM command to succeed |
+| `pageLoadTimeout` | `60000ms` | Maximum time Cypress waits for a full page load |
+| `blockHosts` | `events.backtrace.io` | Blocks third-party analytics requests to prevent timeout noise |
 
 ---

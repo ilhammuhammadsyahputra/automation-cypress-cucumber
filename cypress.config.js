@@ -23,7 +23,10 @@ async function setupNodeEvents(on, config) {
 module.exports = defineConfig({
   e2e: {
     baseUrl: "https://www.saucedemo.com",
-    specPattern: "cypress/e2e/features/**/*.feature",
+    specPattern: [
+      "cypress/e2e/features/**/*.feature",
+      "cypress/api/**/*.js",
+    ],
     supportFile: "cypress/support/e2e.js",
     setupNodeEvents,
     viewportWidth: 1280,

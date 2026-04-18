@@ -22,6 +22,7 @@ export class LoginPage {
 		this.doClickLoginButton()
 	}
 
+
 	validateLoginPageVisible() {
 		cy.get('[data-test="login-button"]').should('be.visible')
 	}

@@ -1,0 +1,6 @@
+{
+	"ONE_PIECE": {
+		"BASE_URL": "https://api.api-onepiece.com",
+		"CHARACTERS": "/v2/characters/en"
+	}
+}
