@@ -207,6 +207,86 @@ This displays your Cypress version, available browsers, and system information. 
 
 ---
 
+### Step 5 — First-Time Cypress UI Setup
+
+Run the interactive test runner:
+
+```bash
+npm run test:open
+```
+
+The first time you open Cypress, you will be prompted to complete a brief setup wizard:
+
+**a) Choose a testing type**
+
+Select **E2E Testing** (not Component Testing).
+
+```
+What type of testing would you like to set up?
+  > E2E Testing
+    Component Testing
+```
+
+**b) Review configuration files**
+
+Cypress will display the config files it has detected (e.g., `cypress.config.js`). Click **Continue**.
+
+**c) Select a browser**
+
+Cypress will list all browsers detected on your machine. **Chrome** is recommended for best compatibility.
+
+```
+Choose a browser?
+  > Chrome       (recommended)
+    Firefox
+    Electron
+    Edge
+```
+
+Click **Start E2E Testing in Chrome** (or your preferred browser).
+
+**d) macOS — Security Permission (first time only)**
+
+On macOS, the system may block Cypress from launching the browser. If this happens:
+
+1. Open **System Settings → Privacy & Security**
+2. Scroll down to the blocked app notification and click **Allow Anyway**
+3. Re-run `npm run test:open`
+
+Alternatively, run this command to clear the macOS quarantine flag:
+
+```bash
+xattr -d com.apple.quarantine ~/Library/Caches/Cypress/<version>/Cypress.app
+```
+
+Replace `<version>` with your actual Cypress version (e.g., `13.17.0`). You can find this by running `npx cypress version`.
+
+**e) Run your first test**
+
+Once the browser is open, the Cypress Test Runner shows all available specs. Click any `.feature` file to run it. You will see the test steps execute in real time on the left panel, with a live browser preview on the right.
+
+---
+
+### Optional — Install Cypress Globally
+
+If you prefer to run Cypress commands without `npx`, you can install Cypress globally:
+
+```bash
+npm install -g cypress
+```
+
+Then run commands directly:
+
+```bash
+cypress open
+cypress run
+cypress verify
+```
+
+> **Note:** Global installation is optional. The project is fully configured to work using the local `npx cypress` commands as documented above.
+
+---
+
 ## Running the Tests
 
 ### All Tests (E2E + API)
