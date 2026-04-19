@@ -21,9 +21,7 @@ The project follows a **three-layer architecture** (Feature → Step Definitions
 8. [Test Coverage — API](#test-coverage--api)
 9. [Test Users](#test-users)
 10. [Bug Reports](#bug-reports)
-11. [Test Artifacts](#test-artifacts)
-12. [Configuration](#configuration)
-13. [Troubleshooting](#troubleshooting)
+11. [Configuration](#configuration)
 
 ---
 
@@ -328,7 +326,7 @@ npx cypress run --env tags=@one-piece
 | 1 | Inventory page displays all 6 available products | ✅ Positive |
 | 2 | User can add an item to the cart from the inventory | ✅ Positive |
 | 3 | Unauthenticated user is redirected to the login page | ❌ Negative |
-| 4 | `[Bug]` problem_user sees broken product images | 🐛 Bug |
+| 4 | `[Bug]` problem_user sees broken product images | ❌ Bug |
 
 ### Cart Page — `cart.feature`
 
@@ -348,10 +346,10 @@ All checkout steps (Step One, Step Two, Complete) are covered in a single featur
 | 2 | Cannot proceed to checkout when the form is empty | ❌ Negative |
 | 3 | Order summary displays the correct item and price | ✅ Positive |
 | 4 | User can complete the order by clicking Finish | ✅ Positive |
-| 5 | `[Bug]` Accessing step two directly results in an empty order summary | 🐛 Bug |
+| 5 | `[Bug]` Accessing step two directly results in an empty order summary | ❌ Bug |
 | 6 | Order confirmation is displayed after a successful checkout | ✅ Positive |
 | 7 | Clicking Back Home returns to inventory with an empty cart | ✅ Positive |
-| 8 | `[Bug]` Checkout complete page is accessible without placing an order | 🐛 Bug |
+| 8 | `[Bug]` Checkout complete page is accessible without placing an order | ❌ Bug |
 
 **E2E Total: 18 scenarios — 13 functional tests, 2 negative tests, 3 bug reports**
 
@@ -369,7 +367,7 @@ All checkout steps (Step One, Step Two, Complete) are covered in a single featur
 | 2 | Response should match the character JSON schema | ✅ Pass |
 | 3 | Each character ID must be unique | ✅ Pass |
 | 4 | Gum-Gum Fruit must be exclusive to Monkey D. Luffy | ✅ Pass |
-| 5 | `total_prime` must equal the sum of bounty for all characters in the same crew | 🐛 Fails — API data bug detected |
+| 5 | `total_prime` must equal the sum of bounty for all characters in the same crew | ❌ Fails — API data bug detected |
 
 > **Note on Test #5:** This test is intentionally designed to fail when the API data is inconsistent. It currently detects **15 crews** where the `total_prime` value does not match the sum of individual character bounties — confirming a data quality issue in the API. The test is working correctly; the failure is a **bug report**, not a test defect.
 
@@ -445,20 +443,6 @@ This project identifies and documents **4 bugs** — 3 in the web application an
 | **Expected Behavior** | `total_prime` should always equal the sum of all crew member bounties |
 | **Example** | Crew "The Chapeau de Paille crew": `total_prime = 3,161,000,100` but `bounty_sum = 8,806,001,000` |
 | **Test Scenario** | `total_prime must equal the sum of bounty for all characters in the same crew` |
-
----
-
-## Test Artifacts
-
-After running tests, the following artifacts are automatically generated inside the `cypress/` directory:
-
-```
-cypress/
-├── videos/        # MP4 recording of every test run (auto-generated)
-└── screenshots/   # PNG screenshot captured on every test failure (auto-generated)
-```
-
-These are useful for diagnosing failures without re-running tests manually.
 
 ---
 
